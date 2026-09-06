@@ -1,35 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/auth_provider.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   bool obscurePassword = true;
 
   void login() {
-    const hardcodedUsername = 'thiago';
-    const hardcodedPassword = 'thiago123';
-
-    final email = emailController.text;
+    final email = emailController.text.trim();
     final password = passwordController.text;
-
-    if (email == hardcodedUsername && password == hardcodedPassword) {
-      context.go('/home', extra: email);
-    } else {
+    final auth = ref.read(authProvider.notifier);
+    final err = auth.login(email: email, password: password);
+    if (err != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Usuario o contraseña incorrectos'),
+        SnackBar(
+          content: Text(err),
           backgroundColor: Colors.red,
         ),
       );
+      return;
     }
+    context.go('/home');
   }
 
   @override
@@ -104,6 +104,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       backgroundColor: Colors.indigo,
                       foregroundColor: Colors.white,
                     ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: () => context.go('/register'),
+                    child: const Text('Crear cuenta'),
                   ),
                 ],
               ),

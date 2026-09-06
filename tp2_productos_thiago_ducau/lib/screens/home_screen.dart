@@ -1,221 +1,108 @@
 import 'package:flutter/material.dart';
-import 'package:tp2_productos_thiago_ducau/core/router/entities/product.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../providers/place_provider.dart';
+import '../providers/auth_provider.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerWidget {
   final String? username;
 
   const HomeScreen({super.key, this.username});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final places = ref.watch(placeListProvider);
 
-class _HomeScreenState extends State<HomeScreen> {
-  final formKey = GlobalKey<FormState>();
-
-  final nameController = TextEditingController();
-  final descriptionController = TextEditingController();
-  final priceController = TextEditingController();
-  final quantityController = TextEditingController();
-
-  final List<Product> products = [];
-
-  void _addProduct() {
-    if (formKey.currentState!.validate()) {
-      setState(() {
-        final newProduct = Product(
-          name: nameController.text,
-          description: descriptionController.text,
-          price: double.parse(priceController.text),
-          quantity: int.parse(quantityController.text),
-        );
-
-        products.add(newProduct);
-
-        nameController.clear();
-        descriptionController.clear();
-        priceController.clear();
-        quantityController.clear();
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Producto agregado con éxito'),
-            backgroundColor: Colors.green, // Feedback visual positivo
-          ),
-        );
-      });
-    }
-  }
-
-  void _calculateResults() {
-    if (products.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Debe ingresar al menos un producto'),
-          backgroundColor: Colors.orange, // Feedback visual de advertencia
-        ),
-      );
-      return;
-    }
-
-    final mostExpensiveProduct =
-        products.reduce((a, b) => a.price > b.price ? a : b);
-    final cheapestProduct =
-        products.reduce((a, b) => a.price < b.price ? a : b);
-    final highestQuantityProduct =
-        products.reduce((a, b) => a.quantity > b.quantity ? a : b);
-    final lowestQuantityProduct =
-        products.reduce((a, b) => a.quantity < b.quantity ? a : b);
-    final totalPrice = products.fold(0.0, (sum, item) => sum + item.price);
-    final averagePrice = totalPrice / products.length;
-
-    final results = {
-      'mostExpensiveName': mostExpensiveProduct.name,
-      'mostExpensiveDescription': mostExpensiveProduct.description,
-      'cheapestName': cheapestProduct.name,
-      'cheapestDescription': cheapestProduct.description,
-      'highestQuantityName': highestQuantityProduct.name,
-      'highestQuantityDescription': highestQuantityProduct.description,
-      'lowestQuantityName': lowestQuantityProduct.name,
-      'lowestQuantityDescription': lowestQuantityProduct.description,
-      'averagePrice': averagePrice,
-    };
-
-    context.go('/results', extra: results);
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100], // Fondo ligeramente gris para que resalte la tarjeta
       appBar: AppBar(
-        title: Text('Hola, ${widget.username ?? 'Usuario'}'),
-        backgroundColor: Colors.indigo, // Color clásico y elegante para el AppBar
-        foregroundColor: Colors.white,
-        automaticallyImplyLeading: false,
+        title: Text('Lugares turísticos'),
+        backgroundColor: Colors.indigo,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () => _openAddDialog(context, ref),
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () {
+              ref.read(authProvider.notifier).logout();
+              context.go('/');
+            },
+          ),
+        ],
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Card(
-            elevation: 3, // Sombra sutil
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12), // Bordes un poco redondeados
+      body: ListView.builder(
+        padding: const EdgeInsets.all(12),
+        itemCount: places.length,
+        itemBuilder: (context, index) {
+          final p = places[index];
+          return Card(
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            child: ListTile(
+              leading: Image.network(p.imageUrl, width: 72, height: 72, fit: BoxFit.cover, errorBuilder: (c, e, s) => const Icon(Icons.image)),
+              title: Text(p.name),
+              subtitle: Text('${p.location} • ${p.rating.toStringAsFixed(1)} ⭐'),
+              onTap: () => context.go('/detail', extra: p.id),
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(20.0), // Espaciado interno de la tarjeta
-              child: Form(
-                key: formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min, // Para que la tarjeta se adapte al contenido
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Text(
-                      "Nuevo Producto",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.indigo,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    TextFormField(
-                      controller: nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Nombre',
-                        prefixIcon: Icon(Icons.shopping_bag_outlined),
-                        border: OutlineInputBorder(), // Borde estándar de Material
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Requerido';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: descriptionController,
-                      decoration: const InputDecoration(
-                        labelText: 'Descripción',
-                        prefixIcon: Icon(Icons.description_outlined),
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Requerido';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: priceController,
-                      decoration: const InputDecoration(
-                        labelText: 'Precio',
-                        prefixIcon: Icon(Icons.attach_money),
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Requerido';
-                        }
-                        if (double.tryParse(value) == null) {
-                          return 'Número inválido';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: quantityController,
-                      decoration: const InputDecoration(
-                        labelText: 'Cantidad',
-                        prefixIcon: Icon(Icons.numbers),
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Requerido';
-                        }
-                        if (int.tryParse(value) == null) {
-                          return 'Entero inválido';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton.icon(
-                      onPressed: _addProduct,
-                      icon: const Icon(Icons.add),
-                      label: const Text('Agregar Producto'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        backgroundColor: Colors.green, // Botón de acción principal
-                        foregroundColor: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    ElevatedButton.icon(
-                      onPressed: _calculateResults,
-                      icon: const Icon(Icons.analytics_outlined),
-                      label: const Text('Ver Resultados'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        backgroundColor: Colors.indigo, // Botón secundario
-                        foregroundColor: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _openAddDialog(context, ref),
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  void _openAddDialog(BuildContext context, WidgetRef ref) {
+    final formKey = GlobalKey<FormState>();
+    final nameController = TextEditingController();
+    final descController = TextEditingController();
+    final imageController = TextEditingController();
+    final locationController = TextEditingController();
+    final ratingController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Agregar lugar'),
+        content: SingleChildScrollView(
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(controller: nameController, decoration: const InputDecoration(labelText: 'Nombre'), validator: (v) => (v==null||v.isEmpty)?'Requerido':null),
+                TextFormField(controller: descController, decoration: const InputDecoration(labelText: 'Descripción'), validator: (v) => (v==null||v.isEmpty)?'Requerido':null),
+                TextFormField(controller: imageController, decoration: const InputDecoration(labelText: 'URL imagen'), validator: (v) => (v==null||v.isEmpty)?'Requerido':null),
+                TextFormField(controller: locationController, decoration: const InputDecoration(labelText: 'Ubicación'), validator: (v) => (v==null||v.isEmpty)?'Requerido':null),
+                TextFormField(controller: ratingController, decoration: const InputDecoration(labelText: 'Rating (0-5)'), keyboardType: TextInputType.number, validator: (v) {
+                  if (v==null||v.isEmpty) return 'Requerido';
+                  final val = double.tryParse(v);
+                  if (val==null || val<0 || val>5) return 'Valor entre 0 y 5';
+                  return null;
+                }),
+              ],
             ),
           ),
         ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
+          ElevatedButton(
+            onPressed: () {
+              if (!formKey.currentState!.validate()) return;
+              ref.read(placeListProvider.notifier).addPlace(
+                name: nameController.text.trim(),
+                description: descController.text.trim(),
+                imageUrl: imageController.text.trim(),
+                location: locationController.text.trim(),
+                rating: double.parse(ratingController.text.trim()),
+              );
+              Navigator.of(context).pop();
+            },
+            child: const Text('Agregar'),
+          ),
+        ],
       ),
     );
   }

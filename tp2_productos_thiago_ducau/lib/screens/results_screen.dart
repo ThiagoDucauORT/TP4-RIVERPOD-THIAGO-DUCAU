@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/auth_provider.dart';
 
-class ResultsScreen extends StatelessWidget {
+class ResultsScreen extends ConsumerWidget {
   final Map<String, dynamic> results;
 
   const ResultsScreen({super.key, required this.results});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     // Función auxiliar actualizada al nuevo estilo
     Widget buildResultCard(String title, String name, String description, IconData icon) {
       return Card(
@@ -126,7 +128,10 @@ class ResultsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
-            onPressed: () => context.go('/'),
+            onPressed: () {
+              ref.read(authProvider.notifier).logout();
+              context.go('/');
+            },
             icon: const Icon(Icons.exit_to_app),
             label: const Text('Cerrar sesión'),
             style: ElevatedButton.styleFrom(
