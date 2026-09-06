@@ -15,7 +15,7 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Lugares turísticos'),
+        title: const Text('Lugares turísticos'),
         backgroundColor: Colors.indigo,
         actions: [
           IconButton(
@@ -61,34 +61,49 @@ class HomeScreen extends ConsumerWidget {
     final imageController = TextEditingController();
     final locationController = TextEditingController();
     final ratingController = TextEditingController();
+    // Nuevos controladores
+    final foodsController = TextEditingController();
+    final spotsController = TextEditingController();
+    final tipsController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Agregar lugar'),
-        content: SingleChildScrollView(
-          child: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(controller: nameController, decoration: const InputDecoration(labelText: 'Nombre'), validator: (v) => (v==null||v.isEmpty)?'Requerido':null),
-                TextFormField(controller: descController, decoration: const InputDecoration(labelText: 'Descripción'), validator: (v) => (v==null||v.isEmpty)?'Requerido':null),
-                TextFormField(controller: imageController, decoration: const InputDecoration(labelText: 'URL imagen'), validator: (v) => (v==null||v.isEmpty)?'Requerido':null),
-                TextFormField(controller: locationController, decoration: const InputDecoration(labelText: 'Ubicación'), validator: (v) => (v==null||v.isEmpty)?'Requerido':null),
-                TextFormField(controller: ratingController, decoration: const InputDecoration(labelText: 'Rating (0-5)'), keyboardType: TextInputType.number, validator: (v) {
-                  if (v==null||v.isEmpty) return 'Requerido';
-                  final val = double.tryParse(v);
-                  if (val==null || val<0 || val>5) return 'Valor entre 0 y 5';
-                  return null;
-                }),
-              ],
+        title: const Text('Agregar nuevo destino', style: TextStyle(color: Colors.indigo)),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(controller: nameController, decoration: const InputDecoration(labelText: 'Nombre'), validator: (v) => (v==null||v.isEmpty)?'Requerido':null),
+                  TextFormField(controller: locationController, decoration: const InputDecoration(labelText: 'Ubicación (País)'), validator: (v) => (v==null||v.isEmpty)?'Requerido':null),
+                  TextFormField(controller: imageController, decoration: const InputDecoration(labelText: 'URL imagen'), validator: (v) => (v==null||v.isEmpty)?'Requerido':null),
+                  TextFormField(controller: ratingController, decoration: const InputDecoration(labelText: 'Rating (0-5)'), keyboardType: TextInputType.number, validator: (v) {
+                    if (v==null||v.isEmpty) return 'Requerido';
+                    final val = double.tryParse(v);
+                    if (val==null || val<0 || val>5) return 'Valor entre 0 y 5';
+                    return null;
+                  }),
+                  const SizedBox(height: 16),
+                  TextFormField(controller: descController, decoration: const InputDecoration(labelText: 'Descripción detallada', alignLabelWithHint: true, border: OutlineInputBorder()), maxLines: 3, validator: (v) => (v==null||v.isEmpty)?'Requerido':null),
+                  const SizedBox(height: 12),
+                  TextFormField(controller: spotsController, decoration: const InputDecoration(labelText: 'Lugares para visitar', alignLabelWithHint: true, border: OutlineInputBorder()), maxLines: 3, validator: (v) => (v==null||v.isEmpty)?'Requerido':null),
+                  const SizedBox(height: 12),
+                  TextFormField(controller: foodsController, decoration: const InputDecoration(labelText: 'Comidas típicas', alignLabelWithHint: true, border: OutlineInputBorder()), maxLines: 3, validator: (v) => (v==null||v.isEmpty)?'Requerido':null),
+                  const SizedBox(height: 12),
+                  TextFormField(controller: tipsController, decoration: const InputDecoration(labelText: 'Recomendaciones', alignLabelWithHint: true, border: OutlineInputBorder()), maxLines: 3, validator: (v) => (v==null||v.isEmpty)?'Requerido':null),
+                ],
+              ),
             ),
           ),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo, foregroundColor: Colors.white),
             onPressed: () {
               if (!formKey.currentState!.validate()) return;
               ref.read(placeListProvider.notifier).addPlace(
@@ -97,10 +112,13 @@ class HomeScreen extends ConsumerWidget {
                 imageUrl: imageController.text.trim(),
                 location: locationController.text.trim(),
                 rating: double.parse(ratingController.text.trim()),
+                recommendedFoods: foodsController.text.trim(),
+                touristSpots: spotsController.text.trim(),
+                recommendations: tipsController.text.trim(),
               );
               Navigator.of(context).pop();
             },
-            child: const Text('Agregar'),
+            child: const Text('Agregar destino'),
           ),
         ],
       ),

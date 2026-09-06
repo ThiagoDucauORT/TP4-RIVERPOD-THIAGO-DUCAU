@@ -3,8 +3,11 @@ class Place {
   final String name;
   final String description;
   final String imageUrl;
-  final String location; // dato adicional
-  final double rating; // dato adicional
+  final String location; 
+  final double rating; 
+  final String recommendedFoods;
+  final String touristSpots;
+  final String recommendations;
 
   Place({
     required this.id,
@@ -13,6 +16,9 @@ class Place {
     required this.imageUrl,
     required this.location,
     required this.rating,
+    required this.recommendedFoods,
+    required this.touristSpots,
+    required this.recommendations,
   });
 
   Place copyWith({
@@ -22,6 +28,9 @@ class Place {
     String? imageUrl,
     String? location,
     double? rating,
+    String? recommendedFoods,
+    String? touristSpots,
+    String? recommendations,
   }) {
     return Place(
       id: id ?? this.id,
@@ -30,6 +39,9 @@ class Place {
       imageUrl: imageUrl ?? this.imageUrl,
       location: location ?? this.location,
       rating: rating ?? this.rating,
+      recommendedFoods: recommendedFoods ?? this.recommendedFoods,
+      touristSpots: touristSpots ?? this.touristSpots,
+      recommendations: recommendations ?? this.recommendations,
     );
   }
 }
