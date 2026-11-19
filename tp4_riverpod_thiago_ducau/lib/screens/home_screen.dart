@@ -18,7 +18,7 @@ class HomeScreen extends ConsumerWidget {
         if (user?.displayName?.isNotEmpty == true)
           Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: Center(child: Text(user!.displayName!))),
         IconButton(tooltip: 'Cerrar sesión', icon: const Icon(Icons.logout), onPressed: () async {
-          try { await ref.read(authProvider).logout(); }
+          try { await ref.read(authProvider).logout(); if (context.mounted) context.go('/'); }
           on FirebaseAuthException catch (e) {
             if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message ?? 'Error al cerrar sesión.')));
           }
